@@ -1,12 +1,11 @@
 const https = require("https");
 const fs = require("fs");
+const zlib = require("zlib");
 
-// usernames.txt → satu username per baris
-// wallets.txt   → satu wallet per baris (urutan harus sama)
 const USERNAMES_FILE = "usernames.txt";
 const WALLETS_FILE = "wallets.txt";
 const COOKIE = "__test=d20dee4c8ec02ad61346b76784347357";
-const DELAY_MS = 2000; // jeda antar akun (ms)
+const DELAY_MS = 2000;
 
 function randomStatus() {
   const suffix = Array.from({ length: 17 }, () => Math.floor(Math.random() * 10)).join("");
@@ -44,15 +43,25 @@ function submit(username, wallet) {
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin",
-        "User-Agent":
-          "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
       },
     };
 
     const req = https.request(options, (res) => {
+      const encoding = res.headers["content-encoding"];
+      let stream = res;
+
+      if (encoding === "br") {
+        stream = res.pipe(zlib.createBrotliDecompress());
+      } else if (encoding === "gzip") {
+        stream = res.pipe(zlib.createGunzip());
+      } else if (encoding === "deflate") {
+        stream = res.pipe(zlib.createInflate());
+      }
+
       let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () => {
+      stream.on("data", (chunk) => (data += chunk));
+      stream.on("end", () => {
         try {
           const json = JSON.parse(data);
           if (json.success) {

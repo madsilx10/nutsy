@@ -4,31 +4,34 @@ const fs = require("fs");
 const EMAILS_FILE = "emails.txt";
 const DELAY_MS = 2000;
 
-const FORM_ID = "1FAlpQLSc-diD3TFbZKnCdZdYyaaWdFTxwJ045czITly4PrcDtXO3bPA";
+const FORM_ID = "1FAIpQLSc-diD3TFbZKnCdZdYyaaWdFTxwJ045czITLy4PrcDtXO3bPA";
 const ENTRY_ID = "entry.703357982";
 
 function submit(email) {
   return new Promise((resolve) => {
-    const body = `${ENTRY_ID}=${encodeURIComponent(email)}`;
+    const boundary = "----WebKitFormBoundaryhD6R8eml5x9qa4w8";
+    const body =
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="${ENTRY_ID}"\r\n\r\n` +
+      `${email}\r\n` +
+      `--${boundary}--\r\n`;
 
     const options = {
       hostname: "docs.google.com",
       path: `/forms/d/e/${FORM_ID}/formResponse`,
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": `multipart/form-data; boundary=${boundary}`,
         "Content-Length": Buffer.byteLength(body),
         Accept: "*/*",
-        "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-        Origin: "https://usewisp.io",
-        Referer: "https://usewisp.io/",
         "Sec-Ch-Ua": '"Not)A;Brand";v="24", "Chromium";v="116"',
         "Sec-Ch-Ua-Mobile": "?1",
         "Sec-Ch-Ua-Platform": '"Android"',
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "no-cors",
         "Sec-Fetch-Site": "cross-site",
+        Referer: "https://usewisp.io/",
         "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36",
       },
     };

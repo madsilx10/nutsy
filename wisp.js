@@ -1,7 +1,6 @@
 const https = require("https");
 const fs = require("fs");
 
-// emails.txt → satu email per baris
 const EMAILS_FILE = "emails.txt";
 const DELAY_MS = 2000;
 
@@ -10,15 +9,14 @@ const ENTRY_ID = "entry.703357982";
 
 function submit(email) {
   return new Promise((resolve) => {
-    const boundary = "----WebKitFormBoundaryXXXXXXXXXXXXXXXX";
-    const body = `--${boundary}\r\nContent-Disposition: form-data; name="${ENTRY_ID}"\r\n\r\n${email}\r\n--${boundary}--`;
+    const body = `${ENTRY_ID}=${encodeURIComponent(email)}`;
 
     const options = {
       hostname: "docs.google.com",
       path: `/forms/d/e/${FORM_ID}/formResponse`,
       method: "POST",
       headers: {
-        "Content-Type": `multipart/form-data; boundary=${boundary}`,
+        "Content-Type": "application/x-www-form-urlencoded",
         "Content-Length": Buffer.byteLength(body),
         Accept: "*/*",
         "Accept-Encoding": "gzip, deflate, br",
@@ -36,7 +34,7 @@ function submit(email) {
     };
 
     const req = https.request(options, (res) => {
-      res.resume(); // response emang kosong, drain aja
+      res.resume();
       res.on("end", () => {
         if (res.statusCode === 200) {
           console.log(`✅ ${email}`);
